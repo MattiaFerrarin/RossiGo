@@ -9,6 +9,15 @@ public class FleetService {
     HashMap<String, Vehicle> Vehicles;
     HashMap<String, Rent> Rents;
 
+
+    private void LoadFromDatabase(){
+
+    }
+
+    private void UpdateDatabase(){
+
+    }
+
     public void RegisterVehicle(Vehicle v){
 
     }
