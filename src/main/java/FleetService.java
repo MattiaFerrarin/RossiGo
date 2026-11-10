@@ -5,8 +5,15 @@ import Model.User;
 import Model.Vehicle;
 import Model.Rent;
 import it.kamaladafrica.codicefiscale.CodiceFiscale;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.validator.routines.EmailValidator;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 public class FleetService {
     HashMap<String, User> Users;
@@ -22,14 +29,35 @@ public class FleetService {
 
     }
 
+    public void ExportRents() {
+        String[] headers = {"User", "Vehicle", "StartTime", "EndTime"};
+
+        try (FileWriter out = new FileWriter("rents.csv");
+             CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT.withHeader(headers))) {
+            for(Map.Entry<String, Rent> item : Rents.entrySet()){
+                printer.printRecord(item.getValue().User().id(), item.getValue().Vehicle().Code(), item.getValue().StartTime().toString(), item.getValue().EndTime().toString());
+            }
+            printer.flush();
+        } catch (IOException e) {
+            System.out.println("Error while exporting");
+        }
+    }
+
     public void RegisterVehicle(Vehicle v){
         Vehicles.put(v.Code(), v);
         UpdateDatabase();
     }
 
-    public void RegisterUser(User u) throws CFInvalidException {
+    public void RegisterUser(User u) throws CFInvalidException, IllegalArgumentException {
         if(!CodiceFiscale.isFormatValid(u.CF())){
             throw new CFInvalidException("Invalid CF", u.CF());
+        }
+        if (StringUtils.isBlank(u.name())) {
+            throw new IllegalArgumentException("The name can't be empty");
+        }
+        EmailValidator validator = EmailValidator.getInstance();
+        if(!validator.isValid(u.email())){
+            throw new IllegalArgumentException("Invalid email");
         }
         Users.put(u.id(), u);
         UpdateDatabase();
@@ -40,7 +68,7 @@ public class FleetService {
         if (u == null) {
             throw new UserNotFoundException("User not found");
         }
-        // ???
+        // Unlock vehicle (? What do I do?)
         UpdateDatabase();
     }
 
